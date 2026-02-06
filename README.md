@@ -1,4 +1,4 @@
-# Lab 2 – Community Web API
+# Community Web API
 
 ## 📌 Description
 This project is **Lab 2** in the .NET Cloud Development course.  
