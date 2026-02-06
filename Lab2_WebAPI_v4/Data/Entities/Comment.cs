@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Lab2_WebAPI_v4.Data.Entities
 {
@@ -19,7 +20,10 @@ namespace Lab2_WebAPI_v4.Data.Entities
         public int PostID { get; set; }
 
         // Navigation properties
-        public User User { get; set; }
-        public Post Post { get; set; }
+        [JsonIgnore]
+        public User? User { get; set; }
+
+        [JsonIgnore]
+        public Post? Post { get; set; }
     }
 }

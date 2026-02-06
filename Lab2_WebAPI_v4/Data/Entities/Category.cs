@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Lab2_WebAPI_v4.Data.Entities
 {
@@ -12,6 +13,7 @@ namespace Lab2_WebAPI_v4.Data.Entities
         public string CategoryName { get; set; }
 
         // Navigation property
+        [JsonIgnore]
         public List<Post> Posts { get; set; }
     }
 }

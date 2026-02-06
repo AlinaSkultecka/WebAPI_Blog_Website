@@ -32,23 +32,43 @@ namespace Lab2_WebAPI_v4.Controllers
         [HttpPost]
         public IActionResult AddPost(Post post)
         {
+            // Creating a post: client must NOT send PostID (identity column)
+            if (post.PostID != 0)
+                return BadRequest("Do not send PostID when creating a post.");
+
+            // model validation (required fields etc.)
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // extra check because missing int -> 0
+            if (post.CategoryID <= 0)
+                return BadRequest("CategoryID is required and must be > 0.");
+
             post.UserID = GetUserIdFromToken();
             _repo.AddPost(post);
             return Created();
         }
 
+
         [HttpPut]
         public IActionResult UpdatePost(Post post)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (post.CategoryID <= 0)
+                return BadRequest("CategoryID is required and must be > 0.");
+
             post.UserID = GetUserIdFromToken();
 
             var ok = _repo.UpdatePost(post);
 
             if (!ok)
-                return Forbid(); // or NotFound() if you prefer
+                return Forbid();
 
             return Ok();
         }
+
 
         [HttpDelete("{postId}")]
         public IActionResult DeletePost(int postId)

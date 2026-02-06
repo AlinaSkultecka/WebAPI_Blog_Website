@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Lab2_WebAPI_v4.Data.Entities
 {
@@ -21,10 +22,15 @@ namespace Lab2_WebAPI_v4.Data.Entities
         [Required]
         public int CategoryID { get; set; }
 
-        // Navigation properties
-        public User User { get; set; }
-        public Category Category { get; set; }
-        public List<Comment> Comments { get; set; }
+        // Navigation properties should NOT be required for POST
+        [JsonIgnore]
+        public User? User { get; set; }
+
+        [JsonIgnore]
+        public Category? Category { get; set; }
+
+        [JsonIgnore]
+        public List<Comment>? Comments { get; set; } = new();
     }
 }
 

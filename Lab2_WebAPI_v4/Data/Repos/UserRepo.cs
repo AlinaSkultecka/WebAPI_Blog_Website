@@ -22,7 +22,8 @@ namespace Lab2_WebAPI_v4.Data.Repos
 
         public void DeleteUser(int id)
         {
-            var user= _context.Users.SingleOrDefault(p=> p.UserID==id);
+            var user = _context.Users.SingleOrDefault(p => p.UserID == id);
+            if (user == null) return;
             _context.Users.Remove(user);
             _context.SaveChanges();
         }

@@ -100,9 +100,5 @@ namespace Lab2_WebAPI_v4.Controller
 
             return Ok(new { Token = tokenString });
         }
-
-
-
-
     }
 }

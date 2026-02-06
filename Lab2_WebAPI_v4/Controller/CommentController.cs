@@ -31,16 +31,36 @@ namespace Lab2_WebAPI_v4.Controllers
         [HttpPost]
         public IActionResult AddComment(Comment comment)
         {
-            _repo.AddComment(comment, GetUserIdFromToken());
-            return Created();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                _repo.AddComment(comment, GetUserIdFromToken());
+                return Created();
+            }
+            catch (Exception ex)
+            {
+                // simple mapping
+                if (ex.Message.Contains("own post"))
+                    return Forbid();
+
+                if (ex.Message.Contains("not found"))
+                    return NotFound();
+
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("{commentId}")]
         public IActionResult DeleteComment(int commentId)
         {
-            _repo.DeleteComment(commentId, GetUserIdFromToken());
+            var ok = _repo.DeleteComment(commentId, GetUserIdFromToken());
+
+            if (!ok)
+                return Forbid(); // or NotFound() depending on your lab rules
+
             return Ok();
         }
     }
-
 }

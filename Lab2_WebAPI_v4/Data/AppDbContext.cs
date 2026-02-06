@@ -39,6 +39,5 @@ namespace Lab2_WebAPI_v4.Data
                 .HasForeignKey(c => c.UserID)
                 .OnDelete(DeleteBehavior.NoAction);
         }
-
     }
 }
