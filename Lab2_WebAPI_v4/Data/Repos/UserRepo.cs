@@ -1,58 +1,105 @@
 ﻿using Lab2_WebAPI_v4.Data.Entities;
 using Lab2_WebAPI_v4.Data.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lab2_WebAPI_v4.Data.Repos
 {
+    /// <summary>
+    /// Repository responsible for database operations related to users.
+    /// Handles CRUD operations and authentication lookup.
+    /// </summary>
     public class UserRepo : IUserRepo
     {
         private readonly AppDbContext _context;
 
-        //Contexten sätts upp i service containern och injectas till 
-        //denna klassen via konstruktorn
+        /// <summary>
+        /// Constructor – injects the application's DbContext.
+        /// </summary>
         public UserRepo(AppDbContext context)
         {
             _context = context;
         }
 
-        public void AddUser(User user)
+        // -------------------- CREATE USER --------------------
+
+        /// <summary>
+        /// Adds a new user to the database.
+        /// </summary>
+        public async Task AddUserAsync(User user)
         {
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
 
-        public void DeleteUser(int id)
+        // -------------------- DELETE USER --------------------
+
+        /// <summary>
+        /// Deletes a user by ID.
+        /// If user does not exist, method exits silently.
+        /// </summary>
+        public async Task DeleteUserAsync(int id)
         {
-            var user = _context.Users.SingleOrDefault(p => p.UserID == id);
-            if (user == null) return;
+            var user = await _context.Users
+                .SingleOrDefaultAsync(p => p.UserID == id);
+
+            if (user == null)
+                return;
+
             _context.Users.Remove(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public List<User> GetAllUsers()
+        // -------------------- GET ALL USERS --------------------
+
+        /// <summary>
+        /// Retrieves all users from the database.
+        /// </summary>
+        /// <returns>List of User entities.</returns>
+        public async Task<List<User>> GetAllUsersAsync()
         {
-            return _context.Users.ToList();
+            return await _context.Users.ToListAsync();
         }
 
-        public void UpdateUser(User userUpdated)
-        {
-            //Hämta den product som skall uppdateras
-            var productOrg = _context.Users
-                .SingleOrDefault(p => p.UserID == userUpdated.UserID);
+        // -------------------- UPDATE USER --------------------
 
-            _context.Entry(productOrg).CurrentValues.SetValues(userUpdated);
-            _context.SaveChanges();
+        /// <summary>
+        /// Updates an existing user.
+        /// Uses EF tracking to update current values.
+        /// </summary>
+        public async Task UpdateUserAsync(User userUpdated)
+        {
+            var userOrg = await _context.Users
+                .SingleOrDefaultAsync(p => p.UserID == userUpdated.UserID);
+
+            if (userOrg == null)
+                return;
+
+            // Copy updated values into tracked entity
+            _context.Entry(userOrg).CurrentValues.SetValues(userUpdated);
+
+            await _context.SaveChangesAsync();
         }
 
-        public int Login(string userName, string password)
+        // -------------------- LOGIN --------------------
+
+        /// <summary>
+        /// Validates user credentials.
+        /// Returns UserID if valid, otherwise -1.
+        /// </summary>
+        /// <param name="userName">Username</param>
+        /// <param name="password">Password (plain text for lab purposes)</param>
+        /// <returns>UserID or -1 if authentication fails</returns>
+        public async Task<int> LoginAsync(string userName, string password)
         {
-            var user = _context.Users
-                .SingleOrDefault(u => u.UserName == userName && u.Password == password);
+            var user = await _context.Users
+                .SingleOrDefaultAsync(u =>
+                    u.UserName == userName &&
+                    u.Password == password);
 
             if (user == null)
                 return -1;
 
             return user.UserID;
         }
-
     }
 }

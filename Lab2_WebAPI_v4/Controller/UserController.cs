@@ -1,104 +1,102 @@
-﻿using Lab2_WebAPI_v4.Data.DTOs;
+﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
 using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.Data.Interfaces;
-using Microsoft.AspNetCore.Http;
+using Lab2_WebAPI_v4.DTOs.User;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
 
 namespace Lab2_WebAPI_v4.Controller
 {
-    [Route("api/[controller]")]
+    /// <summary>
+    /// Handles user management and authentication (CRUD + Login).
+    /// This controller communicates only with the Service layer.
+    /// </summary>
     [ApiController]
+    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        //Här skall vi ha CRUD funktionalitet mot databasen. Innebär att vi skall ha
-        //endpoint som stöder GET, POST, PUT, DELETE
-        private readonly IUserRepo _repo;
+        private readonly IUserService _service;
 
-        public UserController(IUserRepo repo)
+        /// <summary>
+        /// Constructor – injects the UserService via dependency injection.
+        /// </summary>
+        public UserController(IUserService service)
         {
-            _repo = repo;
+            _service = service;
         }
 
-        //Endpoints i en controller skall vara tunna och inte innehålla
-        //mycket kod. Bara ta emot en request och skicka den vidare till repot
-        //och sedan skicka tillbaka en response
+        // -------------------- GET ALL USERS --------------------
+
+        /// <summary>
+        /// Returns all registered users.
+        /// </summary>
         [HttpGet]
-        public IActionResult GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            return Ok(_repo.GetAllUsers());
+            var users = await _service.GetAllAsync();
+            return Ok(users);
         }
 
+        // -------------------- CREATE USER --------------------
 
+        /// <summary>
+        /// Creates a new user account.
+        /// Password hashing is handled in the service layer.
+        /// </summary>
         [HttpPost]
-        public IActionResult AddUser(User user)
+        public async Task<IActionResult> AddUser([FromBody] User user)
         {
-
-            _repo.AddUser(user);
-
-            return Created();
-
+            await _service.AddAsync(user);
+            return Created("", user);
         }
 
+        // -------------------- UPDATE USER --------------------
+
+        /// <summary>
+        /// Updates an existing user.
+        /// </summary>
         [HttpPut]
-        public IActionResult UpdateUser(User user)
+        public async Task<IActionResult> UpdateUser([FromBody] User user)
         {
+            var updated = await _service.UpdateAsync(user);
 
-            _repo.UpdateUser(user);
-            return Ok();
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
         }
 
-        [HttpDelete]
-        public IActionResult DeleteUser(int id)
-        {
+        // -------------------- DELETE USER --------------------
 
+        /// <summary>
+        /// Deletes a user by ID.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
             if (id <= 0)
-                return BadRequest();
+                return BadRequest("Invalid user ID.");
 
-            _repo.DeleteUser(id);
-            return Ok();
+            var deleted = await _service.DeleteAsync(id);
 
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
         }
 
-        [HttpPost("login")]
-        public IActionResult Login(LoginRequestDto user)
-        {
-            var dbUser = _repo.GetAllUsers()
-                .SingleOrDefault(u =>
-                    u.UserName == user.UserName &&
-                    u.Password == user.Password);
+        // -------------------- LOGIN --------------------
 
-            if (dbUser == null)
+        /// <summary>
+        /// Authenticates a user and returns a JWT token if credentials are valid.
+        /// </summary>
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+        {
+            var token = await _service.LoginAsync(request);
+
+            if (token == null)
                 return Unauthorized();
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, dbUser.UserName),
-                new Claim("UserID", dbUser.UserID.ToString())
-            };
-
-            var secretKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("mykey1234567&%%485734579453%&//1255362"));
-
-            var signinCredentials =
-                new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-
-            var tokenOptions = new JwtSecurityToken(
-                issuer: "http://localhost:5239",
-                audience: "http://localhost:5239",
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(20),
-                signingCredentials: signinCredentials
-            );
-
-            var tokenString =
-                new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-
-            return Ok(new { Token = tokenString });
+            return Ok(new { Token = token });
         }
     }
 }

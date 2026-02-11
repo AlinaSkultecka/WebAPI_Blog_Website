@@ -1,52 +1,73 @@
-﻿using Lab2_WebAPI_v4.Data.DTOs;
+﻿using Lab2_WebAPI_v4.DTOs;
 using Lab2_WebAPI_v4.Data.Entities;
 using Lab2_WebAPI_v4.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lab2_WebAPI_v4.Data.Repos
 {
+    /// <summary>
+    /// Repository responsible for handling database operations related to comments.
+    /// Communicates directly with the DbContext using Entity Framework.
+    /// </summary>
     public class CommentRepo : ICommentRepo
     {
         private readonly AppDbContext _context;
 
+        /// <summary>
+        /// Constructor – injects the application's DbContext.
+        /// </summary>
         public CommentRepo(AppDbContext context)
         {
             _context = context;
         }
 
-        public List<Comment> GetCommentsByPost(int postId)
+        // -------------------- GET COMMENTS BY POST --------------------
+
+        /// <summary>
+        /// Retrieves all comments belonging to a specific post.
+        /// </summary>
+        /// <param name="postId">ID of the post</param>
+        /// <returns>List of Comment entities</returns>
+        public async Task<List<Comment>> GetCommentsByPostAsync(int postId)
         {
-            return _context.Comments
+            return await _context.Comments
                 .Where(c => c.PostID == postId)
-                .ToList();
+                .ToListAsync();
         }
 
-        public void AddComment(Comment comment, int userId)
+        // -------------------- ADD COMMENT --------------------
+
+        public async Task AddCommentAsync(Comment comment)
         {
-            var post = _context.Posts.SingleOrDefault(p => p.PostID == comment.PostID);
-
-            if (post == null)
-                throw new Exception("Post not found"); // better: custom exception or return false
-
-            if (post.UserID == userId)
-                throw new Exception("Cannot comment your own post");
-
-            comment.UserID = userId;
-            _context.Comments.Add(comment);
-            _context.SaveChanges();
+            await _context.Comments.AddAsync(comment);
+            await _context.SaveChangesAsync();
         }
 
-        public bool DeleteComment(int commentId, int userId)
+
+        // -------------------- DELETE COMMENT --------------------
+
+        /// <summary>
+        /// Deletes a comment.
+        /// Only the comment owner can delete it.
+        /// </summary>
+        /// <param name="commentId">ID of the comment</param>
+        /// <param name="userId">ID of the logged-in user</param>
+        /// <returns>True if deleted, otherwise false</returns>
+        public async Task<bool> DeleteCommentAsync(int commentId, int userId)
         {
-            var comment = _context.Comments
-                .SingleOrDefault(c => c.CommentID == commentId && c.UserID == userId);
+            var comment = await _context.Comments
+                .SingleOrDefaultAsync(c =>
+                    c.CommentID == commentId &&
+                    c.UserID == userId);
 
             if (comment == null)
                 return false;
 
             _context.Comments.Remove(comment);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
             return true;
         }
     }
 }
+

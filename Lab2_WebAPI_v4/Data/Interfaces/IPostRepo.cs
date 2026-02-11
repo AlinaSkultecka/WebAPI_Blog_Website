@@ -4,10 +4,13 @@ namespace Lab2_WebAPI_v4.Data.Interfaces
 {
     public interface IPostRepo
     {
-        List<Post> GetAllPosts();
-        void AddPost(Post post);
-        bool UpdatePost(Post post);
-        bool DeletePost(int postId, int userId);
+        Task<List<Post>> GetAllPostsAsync();
+        Task AddPostAsync(Post post);
+        Task<bool> UpdatePostAsync(Post post);
+        Task<bool> DeletePostAsync(int postId, int userId);
+        Task<List<Post>> SearchByTitleAsync(string title);
+        Task<List<Post>> SearchByCategoryAsync(int categoryId);
+
     }
 }
 

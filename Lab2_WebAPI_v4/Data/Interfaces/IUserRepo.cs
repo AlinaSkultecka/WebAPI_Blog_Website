@@ -4,13 +4,10 @@ namespace Lab2_WebAPI_v4.Data.Interfaces
 {
     public interface IUserRepo
     {
-        List<User> GetAllUsers();
-
-        void AddUser(User user);
-
-        void UpdateUser(User user);
-        void DeleteUser(int id);
-        int Login(string userName, string password);
-
+        Task<List<User>> GetAllUsersAsync();
+        Task AddUserAsync(User user);
+        Task UpdateUserAsync(User user);
+        Task DeleteUserAsync(int id);
+        Task<int> LoginAsync(string userName, string password);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Lab2_WebAPI_v4.Data.DTOs
+﻿namespace Lab2_WebAPI_v4.DTOs.Category
 {
     public class CategoryCountDto
     {

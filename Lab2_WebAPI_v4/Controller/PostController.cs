@@ -1,21 +1,22 @@
-﻿using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.Data.Interfaces;
+﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
+using Lab2_WebAPI_v4.DTOs;
+using Lab2_WebAPI_v4.DTOs.Post;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
-namespace Lab2_WebAPI_v4.Controllers
+namespace Lab2_WebAPI_v4.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
     public class PostController : ControllerBase
     {
-        private readonly IPostRepo _repo;
+        private readonly IPostService _service;
 
-        public PostController(IPostRepo repo)
+        public PostController(IPostService service)
         {
-            _repo = repo;
+            _service = service;
         }
 
         private int GetUserIdFromToken()
@@ -23,65 +24,99 @@ namespace Lab2_WebAPI_v4.Controllers
             return int.Parse(User.FindFirst("UserID")!.Value);
         }
 
+        // -------------------- GET ALL POSTS --------------------
+
         [HttpGet]
-        public IActionResult GetAllPosts()
+        [SwaggerOperation(
+            Summary = "Get all posts",
+            Description = "Returns a list of all blog posts."
+        )]
+        public async Task<IActionResult> GetAllPosts()
         {
-            return Ok(_repo.GetAllPosts());
+            var posts = await _service.GetAllAsync();
+            return Ok(posts);
         }
+
+        // -------------------- ADD POST --------------------
 
         [HttpPost]
-        public IActionResult AddPost(Post post)
+        [SwaggerOperation(
+            Summary = "Create post",
+            Description = "Creates a new blog post for the logged-in user."
+        )]
+        public async Task<IActionResult> AddPost([FromBody] CreatePostDto dto)
         {
-            // Creating a post: client must NOT send PostID (identity column)
-            if (post.PostID != 0)
-                return BadRequest("Do not send PostID when creating a post.");
-
-            // model validation (required fields etc.)
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // extra check because missing int -> 0
-            if (post.CategoryID <= 0)
-                return BadRequest("CategoryID is required and must be > 0.");
+            var createdPost = await _service.AddAsync(dto, GetUserIdFromToken());
 
-            post.UserID = GetUserIdFromToken();
-            _repo.AddPost(post);
-            return Created();
+            return Created("", createdPost);
         }
 
+        // -------------------- UPDATE POST --------------------
 
         [HttpPut]
-        public IActionResult UpdatePost(Post post)
+        [SwaggerOperation(
+            Summary = "Update post",
+            Description = "Updates a blog post. Only the owner can update it."
+        )]
+        public async Task<IActionResult> UpdatePost([FromBody] PostDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (post.CategoryID <= 0)
-                return BadRequest("CategoryID is required and must be > 0.");
-
-            post.UserID = GetUserIdFromToken();
-
-            var ok = _repo.UpdatePost(post);
+            var ok = await _service.UpdateAsync(dto, GetUserIdFromToken());
 
             if (!ok)
                 return Forbid();
 
-            return Ok();
+            return NoContent();
         }
 
+        // -------------------- DELETE POST --------------------
 
         [HttpDelete("{postId}")]
-        public IActionResult DeletePost(int postId)
+        [SwaggerOperation(
+            Summary = "Delete post",
+            Description = "Deletes a blog post. Only the owner can delete it."
+        )]
+        public async Task<IActionResult> DeletePost(int postId)
         {
-            var userId = GetUserIdFromToken();
-
-            var ok = _repo.DeletePost(postId, userId);
+            var ok = await _service.DeleteAsync(postId, GetUserIdFromToken());
 
             if (!ok)
-                return Forbid(); // or NotFound()
+                return Forbid();
 
-            return Ok();
+            return NoContent();
         }
 
+        // -------------------- SEARCH BY TITLE --------------------
+
+        [HttpGet("search/title")]
+        public async Task<IActionResult> SearchByTitle([FromQuery] string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                return BadRequest("Title search term is required.");
+
+            var posts = await _service.SearchByTitleAsync(title);
+
+            return Ok(posts);
+        }
+
+        // -------------------- SEARCH BY CATEGORY --------------------
+
+        [HttpGet("search/category")]
+        public async Task<IActionResult> SearchByCategory([FromQuery] int categoryId)
+        {
+            if (categoryId <= 0)
+                return BadRequest("Valid categoryId is required.");
+
+            var posts = await _service.SearchByCategoryAsync(categoryId);
+
+            return Ok(posts);
+        }
     }
 }
+
+
