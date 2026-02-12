@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.DTOs;
 using Lab2_WebAPI_v4.DTOs.Post;
 
 namespace Lab2_WebAPI_v4.Core.Mapping
@@ -9,11 +8,14 @@ namespace Lab2_WebAPI_v4.Core.Mapping
     {
         public MappingProfile()
         {
-            // Entity → DTO
-            CreateMap<Post, PostDto>();
+            // Entity ↔ DTO
+            CreateMap<Post, PostDto>().ReverseMap();
 
-            // DTO → Entity
+            // Create DTO → Entity
             CreateMap<CreatePostDto, Post>();
+
+            // If you want to use UpdatePostDto instead of PostDto:
+            CreateMap<UpdatePostDto, Post>();
         }
     }
 }

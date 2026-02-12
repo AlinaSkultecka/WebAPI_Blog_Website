@@ -9,5 +9,6 @@ namespace Lab2_WebAPI_v4.Data.Interfaces
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(int id);
         Task<int> LoginAsync(string userName, string password);
+        Task<User?> GetByIdAsync(int id);
     }
 }

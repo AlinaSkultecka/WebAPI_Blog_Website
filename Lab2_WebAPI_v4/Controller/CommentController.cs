@@ -1,116 +1,95 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
 using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.Data.Interfaces;
+using Lab2_WebAPI_v4.DTOs.Comment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
 
-namespace Lab2_WebAPI_v4.Controller
+/// <summary>
+/// API controller responsible for managing blog post comments.
+/// Requires authentication for all endpoints.
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class CommentController : ControllerBase
 {
+    private readonly ICommentService _service;
+
     /// <summary>
-    /// Handles operations related to comments on blog posts.
+    /// Initializes a new instance of the <see cref="CommentController"/> class.
     /// </summary>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class CommentController : ControllerBase
+    public CommentController(ICommentService service)
     {
-        private readonly ICommentService _service;
+        _service = service;
+    }
 
-        /// <summary>
-        /// Constructor – injects CommentRepo via dependency injection.
-        /// </summary>
-        public CommentController(ICommentService service)
+    /// <summary>
+    /// Extracts the authenticated user's ID from the JWT token.
+    /// </summary>
+    private int GetUserIdFromToken()
+    {
+        return int.Parse(User.FindFirst("UserID")!.Value);
+    }
+
+    // -------------------- GET COMMENTS BY POST --------------------
+
+    /// <summary>
+    /// Retrieves all comments associated with a specific post.
+    /// </summary>
+    [HttpGet("{postId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetComments(int postId)
+    {
+        var comments = await _service.GetByPostAsync(postId);
+        return Ok(comments);
+    }
+
+    // -------------------- ADD COMMENT --------------------
+
+    /// <summary>
+    /// Creates a new comment for a post.
+    /// Users are not allowed to comment on their own posts.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AddComment([FromBody] CreateCommentDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
         {
-            _service = service;
+            await _service.AddAsync(dto, GetUserIdFromToken());
+            return StatusCode(StatusCodes.Status201Created);
         }
-
-        /// <summary>
-        /// Extracts the logged-in user's ID from JWT token.
-        /// </summary>
-        private int GetUserIdFromToken()
+        catch (InvalidOperationException)
         {
-            return int.Parse(User.FindFirst("UserID")!.Value);
+            return Forbid();
         }
-
-        // -------------------- GET COMMENTS BY POST --------------------
-
-        /// <summary>
-        /// Returns all comments for a specific post.
-        /// </summary>
-        /// <param name="postId">ID of the post</param>
-        [HttpGet("{postId}")]
-        [SwaggerOperation(
-            Summary = "Get comments for a post",
-            Description = "Returns all comments belonging to a specific blog post."
-        )]
-        [ProducesResponseType(typeof(List<Comment>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetComments(int postId)
+        catch (ArgumentException ex)
         {
-            var comments = await _service.GetByPostAsync(postId);
-            return Ok(comments);
-        }
-
-        // -------------------- ADD COMMENT --------------------
-
-        /// <summary>
-        /// Adds a new comment to a post.
-        /// </summary>
-        [HttpPost]
-        [SwaggerOperation(
-            Summary = "Add comment",
-            Description = "Creates a new comment for a blog post. Users cannot comment on their own posts."
-        )]
-        [ProducesResponseType(typeof(Comment), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> AddComment([FromBody] Comment comment)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            try
-            {
-                await _service.AddAsync(comment, GetUserIdFromToken());
-
-                return Created("", comment);
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.Contains("own post"))
-                    return Forbid();
-
-                if (ex.Message.Contains("not found"))
-                    return NotFound();
-
-                return BadRequest(ex.Message);
-            }
-        }
-
-        // -------------------- DELETE COMMENT --------------------
-
-        /// <summary>
-        /// Deletes a comment. Only the comment owner can delete it.
-        /// </summary>
-        /// <param name="commentId">ID of the comment</param>
-        [HttpDelete("{commentId}")]
-        [SwaggerOperation(
-            Summary = "Delete comment",
-            Description = "Deletes a comment. Only the user who created the comment can delete it."
-        )]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> DeleteComment(int commentId)
-        {
-            var ok = await _service.DeleteAsync(commentId, GetUserIdFromToken());
-
-            if (!ok)
-                return Forbid();
-
-            return NoContent();
+            return BadRequest(ex.Message);
         }
     }
+
+    // -------------------- DELETE COMMENT --------------------
+
+    /// <summary>
+    /// Deletes a comment.
+    /// Only the user who created the comment can delete it.
+    /// </summary>
+    [HttpDelete("{commentId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> DeleteComment(int commentId)
+    {
+        var ok = await _service.DeleteAsync(commentId, GetUserIdFromToken());
+
+        if (!ok)
+            return Forbid();
+
+        return NoContent();
+    }
 }
-
-

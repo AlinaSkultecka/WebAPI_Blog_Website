@@ -8,5 +8,6 @@ namespace Lab2_WebAPI_v4.Data.Interfaces
         Task<List<Category>> GetAllCategoriesAsync();
         Task<List<CategoryCountDto>> GetCategoryCountsAsync();
         Task AddCategoryAsync(Category category);
+        Task<bool> CategoryExistsAsync(int categoryId);
     }
 }

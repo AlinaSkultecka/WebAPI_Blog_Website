@@ -60,6 +60,20 @@ namespace Lab2_WebAPI_v4.Data.Repos
             return await _context.Users.ToListAsync();
         }
 
+        // -------------------- GET USER BY ID --------------------
+
+        /// <summary>
+        /// Retrieves the users from the database by ID.
+        /// </summary>
+        /// <returns>List of User entities.</returns>
+
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            return await _context.Users
+                .SingleOrDefaultAsync(u => u.UserID == id);
+        }
+
+
         // -------------------- UPDATE USER --------------------
 
         /// <summary>
@@ -86,9 +100,6 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// Validates user credentials.
         /// Returns UserID if valid, otherwise -1.
         /// </summary>
-        /// <param name="userName">Username</param>
-        /// <param name="password">Password (plain text for lab purposes)</param>
-        /// <returns>UserID or -1 if authentication fails</returns>
         public async Task<int> LoginAsync(string userName, string password)
         {
             var user = await _context.Users

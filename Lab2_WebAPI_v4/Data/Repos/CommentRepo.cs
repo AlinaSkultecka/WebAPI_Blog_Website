@@ -26,8 +26,6 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// <summary>
         /// Retrieves all comments belonging to a specific post.
         /// </summary>
-        /// <param name="postId">ID of the post</param>
-        /// <returns>List of Comment entities</returns>
         public async Task<List<Comment>> GetCommentsByPostAsync(int postId)
         {
             return await _context.Comments
@@ -36,7 +34,10 @@ namespace Lab2_WebAPI_v4.Data.Repos
         }
 
         // -------------------- ADD COMMENT --------------------
-
+        
+        /// <summary>
+        /// Adds a new comment to the database.
+        /// </summary>
         public async Task AddCommentAsync(Comment comment)
         {
             await _context.Comments.AddAsync(comment);
@@ -50,9 +51,6 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// Deletes a comment.
         /// Only the comment owner can delete it.
         /// </summary>
-        /// <param name="commentId">ID of the comment</param>
-        /// <param name="userId">ID of the logged-in user</param>
-        /// <returns>True if deleted, otherwise false</returns>
         public async Task<bool> DeleteCommentAsync(int commentId, int userId)
         {
             var comment = await _context.Comments

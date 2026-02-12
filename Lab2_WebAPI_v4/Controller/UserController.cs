@@ -1,13 +1,13 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
-using Lab2_WebAPI_v4.Data.Entities;
 using Lab2_WebAPI_v4.DTOs.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lab2_WebAPI_v4.Controller
 {
     /// <summary>
-    /// Handles user management and authentication (CRUD + Login).
-    /// This controller communicates only with the Service layer.
+    /// API controller responsible for user management and authentication.
+    /// Handles CRUD operations and login functionality.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -16,7 +16,7 @@ namespace Lab2_WebAPI_v4.Controller
         private readonly IUserService _service;
 
         /// <summary>
-        /// Constructor – injects the UserService via dependency injection.
+        /// Initializes a new instance of the <see cref="UserController"/> class.
         /// </summary>
         public UserController(IUserService service)
         {
@@ -26,9 +26,12 @@ namespace Lab2_WebAPI_v4.Controller
         // -------------------- GET ALL USERS --------------------
 
         /// <summary>
-        /// Returns all registered users.
+        /// Retrieves all registered users.
+        /// Requires authentication.
         /// </summary>
         [HttpGet]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _service.GetAllAsync();
@@ -38,25 +41,35 @@ namespace Lab2_WebAPI_v4.Controller
         // -------------------- CREATE USER --------------------
 
         /// <summary>
-        /// Creates a new user account.
-        /// Password hashing is handled in the service layer.
+        /// Registers a new user account.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> AddUser([FromBody] User user)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddUser([FromBody] CreateUserDto dto)
         {
-            await _service.AddAsync(user);
-            return Created("", user);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _service.AddAsync(dto);
+
+            return StatusCode(StatusCodes.Status201Created);
         }
 
         // -------------------- UPDATE USER --------------------
 
         /// <summary>
-        /// Updates an existing user.
+        /// Updates an existing user's information.
+        /// Requires authentication.
         /// </summary>
         [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] User user)
+        [Authorize]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
         {
-            var updated = await _service.UpdateAsync(user);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var updated = await _service.UpdateAsync(dto);
 
             if (!updated)
                 return NotFound();
@@ -68,8 +81,10 @@ namespace Lab2_WebAPI_v4.Controller
 
         /// <summary>
         /// Deletes a user by ID.
+        /// Requires authentication.
         /// </summary>
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteUser(int id)
         {
             if (id <= 0)
@@ -86,11 +101,17 @@ namespace Lab2_WebAPI_v4.Controller
         // -------------------- LOGIN --------------------
 
         /// <summary>
-        /// Authenticates a user and returns a JWT token if credentials are valid.
+        /// Authenticates a user and generates a JWT token.
         /// </summary>
+       
         [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var token = await _service.LoginAsync(request);
 
             if (token == null)

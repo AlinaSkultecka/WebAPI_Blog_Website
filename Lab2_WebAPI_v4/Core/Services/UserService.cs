@@ -11,7 +11,7 @@ namespace Lab2_WebAPI_v4.Core.Services
 {
     /// <summary>
     /// Handles business logic related to users (CRUD + Authentication).
-    /// Communicates with repository layer and handles JWT creation.
+    /// Responsible for validation and JWT token generation.
     /// </summary>
     public class UserService : IUserService
     {
@@ -27,21 +27,34 @@ namespace Lab2_WebAPI_v4.Core.Services
         // -------------------- GET ALL USERS --------------------
 
         /// <summary>
-        /// Retrieves all users.
+        /// Retrieves all registered users.
         /// </summary>
-        public async Task<List<User>> GetAllAsync()
+        public async Task<List<UserResponseDto>> GetAllAsync()
         {
-            return await _repo.GetAllUsersAsync();
+            var users = await _repo.GetAllUsersAsync();
+
+            return users.Select(u => new UserResponseDto
+            {
+                UserID = u.UserID,
+                Email = u.Email,
+                UserName = u.UserName
+            }).ToList();
         }
 
         // -------------------- CREATE USER --------------------
 
         /// <summary>
-        /// Creates a new user.
-        /// Password hashing is handled in repository.
+        /// Creates a new user account.
+        /// Password is stored as provided (no hashing implemented).
         /// </summary>
-        public async Task AddAsync(User user)
+        public async Task AddAsync(CreateUserDto dto)
         {
+            var user = new User
+            {
+                Email = dto.Email,
+                Password = dto.Password
+            };
+
             await _repo.AddUserAsync(user);
         }
 
@@ -51,12 +64,19 @@ namespace Lab2_WebAPI_v4.Core.Services
         /// Updates an existing user.
         /// </summary>
         /// <returns>True if user exists and was updated.</returns>
-        public async Task<bool> UpdateAsync(User user)
+        public async Task<bool> UpdateAsync(UpdateUserDto dto)
         {
-            var existingUsers = await _repo.GetAllUsersAsync();
+            var user = await _repo.GetByIdAsync(dto.UserID);
 
-            if (!existingUsers.Any(u => u.UserID == user.UserID))
+            if (user == null)
                 return false;
+
+            user.Email = dto.Email;
+
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                user.Password = dto.Password;
+            }
 
             await _repo.UpdateUserAsync(user);
             return true;
@@ -70,9 +90,9 @@ namespace Lab2_WebAPI_v4.Core.Services
         /// <returns>True if user existed and was deleted.</returns>
         public async Task<bool> DeleteAsync(int id)
         {
-            var users = await _repo.GetAllUsersAsync();
+            var user = await _repo.GetByIdAsync(id);
 
-            if (!users.Any(u => u.UserID == id))
+            if (user == null)
                 return false;
 
             await _repo.DeleteUserAsync(id);
@@ -107,7 +127,6 @@ namespace Lab2_WebAPI_v4.Core.Services
             var signinCredentials =
                 new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
-            // Generate JWT token
             var tokenOptions = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
@@ -121,5 +140,3 @@ namespace Lab2_WebAPI_v4.Core.Services
         }
     }
 }
-
-

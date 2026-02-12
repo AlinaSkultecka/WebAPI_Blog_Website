@@ -10,7 +10,7 @@ namespace Lab2_WebAPI_v4.Data.Interfaces
         Task<bool> DeletePostAsync(int postId, int userId);
         Task<List<Post>> SearchByTitleAsync(string title);
         Task<List<Post>> SearchByCategoryAsync(int categoryId);
-
+        Task<Post?> GetByIdAsync(int postId);
     }
 }
 

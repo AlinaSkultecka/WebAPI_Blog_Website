@@ -5,9 +5,9 @@ namespace Lab2_WebAPI_v4.Core.Services.Interfaces
 {
     public interface ICategoryService
     {
-        Task<List<Category>> GetAllAsync();
+        Task<List<CategoryResponseDto>> GetAllAsync();
         Task<List<CategoryCountDto>> GetCountsAsync();
-        Task AddCategoryAsync(Category category);
+        Task AddCategoryAsync(CreateCategoryDto dto);
     }
 }
 

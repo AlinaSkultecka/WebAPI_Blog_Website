@@ -31,6 +31,12 @@ namespace Lab2_WebAPI_v4.Data.Repos
             return await _context.Posts.ToListAsync();
         }
 
+        public async Task<Post?> GetByIdAsync(int postId)
+        {
+            return await _context.Posts
+                .SingleOrDefaultAsync(p => p.PostID == postId);
+        }
+
         // -------------------- ADD POST --------------------
 
         /// <summary>
@@ -80,9 +86,6 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// Deletes a post.
         /// Only the post owner can delete it.
         /// </summary>
-        /// <param name="postId">ID of the post</param>
-        /// <param name="userId">ID of the logged-in user</param>
-        /// <returns>True if deleted, otherwise false</returns>
         public async Task<bool> DeletePostAsync(int postId, int userId)
         {
             // Verify that post exists and belongs to the user
@@ -106,8 +109,7 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// Searches posts by title.
         /// Performs a partial match using SQL LIKE through EF Core.
         /// </summary>
-        /// <param name="title">Search keyword</param>
-        /// <returns>List of matching posts</returns>
+
         public async Task<List<Post>> SearchByTitleAsync(string title)
         {
             /*
@@ -125,8 +127,7 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// <summary>
         /// Retrieves posts belonging to a specific category.
         /// </summary>
-        /// <param name="categoryId">Category ID</param>
-        /// <returns>List of posts in that category</returns>
+
         public async Task<List<Post>> SearchByCategoryAsync(int categoryId)
         {
             return await _context.Posts

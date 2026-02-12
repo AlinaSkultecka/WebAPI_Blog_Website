@@ -26,7 +26,6 @@ namespace Lab2_WebAPI_v4.Data.Repos
         /// <summary>
         /// Retrieves all categories from the database.
         /// </summary>
-        /// <returns>List of Category entities.</returns>
         public async Task<List<Category>> GetAllCategoriesAsync()
         {
             // Fetch all records from Categories table
@@ -76,6 +75,12 @@ namespace Lab2_WebAPI_v4.Data.Repos
 
             // Persist changes to database
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> CategoryExistsAsync(int categoryId)
+        {
+            return await _context.Categories
+                .AnyAsync(c => c.CategoryID == categoryId);
         }
     }
 }

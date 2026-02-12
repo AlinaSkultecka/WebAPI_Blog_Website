@@ -38,7 +38,8 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile).Assembly);
+
 
 
 // -------------------- JWT AUTHENTICATION --------------------
