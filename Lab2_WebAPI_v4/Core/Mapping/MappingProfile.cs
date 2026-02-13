@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Lab2_WebAPI_v4.Data.DTOs.Post;
 using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.DTOs.Post;
 
 namespace Lab2_WebAPI_v4.Core.Mapping
 {

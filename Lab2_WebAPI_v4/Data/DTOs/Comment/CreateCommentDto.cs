@@ -1,4 +1,4 @@
-﻿namespace Lab2_WebAPI_v4.DTOs.Comment
+﻿namespace Lab2_WebAPI_v4.Data.DTOs.Comment
 {
     public class CreateCommentDto
     {

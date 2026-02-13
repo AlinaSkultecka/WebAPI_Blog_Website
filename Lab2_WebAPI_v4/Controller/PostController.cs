@@ -1,6 +1,6 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
+using Lab2_WebAPI_v4.Data.DTOs.Post;
 using Lab2_WebAPI_v4.Data.Entities;
-using Lab2_WebAPI_v4.DTOs.Post;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

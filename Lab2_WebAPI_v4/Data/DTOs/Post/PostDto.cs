@@ -1,4 +1,4 @@
-﻿namespace Lab2_WebAPI_v4.DTOs.Post
+﻿namespace Lab2_WebAPI_v4.Data.DTOs.Post
 {
     public class PostDto
     {

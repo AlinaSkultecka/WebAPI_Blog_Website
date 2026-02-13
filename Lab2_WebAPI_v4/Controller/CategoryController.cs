@@ -1,5 +1,5 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
-using Lab2_WebAPI_v4.DTOs.Category;
+using Lab2_WebAPI_v4.Data.DTOs.Category;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 

@@ -1,5 +1,5 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
-using Lab2_WebAPI_v4.DTOs.User;
+using Lab2_WebAPI_v4.Data.DTOs.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

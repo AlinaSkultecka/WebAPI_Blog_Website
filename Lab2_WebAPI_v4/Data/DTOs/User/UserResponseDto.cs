@@ -1,4 +1,4 @@
-﻿namespace Lab2_WebAPI_v4.DTOs.User
+﻿namespace Lab2_WebAPI_v4.Data.DTOs.User
 {
     public class UserResponseDto
     {
