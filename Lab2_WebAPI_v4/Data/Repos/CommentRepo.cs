@@ -1,4 +1,4 @@
-﻿using Lab2_WebAPI_v4.DTOs;
+﻿using Lab2_WebAPI_v4.Data.DTOs;
 using Lab2_WebAPI_v4.Data.Entities;
 using Lab2_WebAPI_v4.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;

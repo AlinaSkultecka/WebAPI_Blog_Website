@@ -51,6 +51,7 @@ namespace Lab2_WebAPI_v4.Core.Services
         {
             var user = new User
             {
+                UserName = dto.UserName,
                 Email = dto.Email,
                 Password = dto.Password
             };

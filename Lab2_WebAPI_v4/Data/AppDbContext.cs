@@ -32,7 +32,7 @@ namespace Lab2_WebAPI_v4.Data
                 new Category { CategoryID = 10, CategoryName = "Science" }
             );
 
-            // FIX: break multiple cascade paths
+            // break multiple cascade paths
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Comments)

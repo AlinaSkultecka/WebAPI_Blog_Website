@@ -40,14 +40,27 @@ namespace Lab2_WebAPI_v4.Data.Repos
         public async Task DeleteUserAsync(int id)
         {
             var user = await _context.Users
-                .SingleOrDefaultAsync(p => p.UserID == id);
+                .Include(u => u.Comments)
+                .Include(u => u.Posts)
+                .SingleOrDefaultAsync(u => u.UserID == id);
 
             if (user == null)
                 return;
 
+            // Remove comments first
+            if (user.Comments.Any())
+                _context.Comments.RemoveRange(user.Comments);
+
+            // Remove posts (if exist)
+            if (user.Posts.Any())
+                _context.Posts.RemoveRange(user.Posts);
+
+            // Now remove user
             _context.Users.Remove(user);
+
             await _context.SaveChangesAsync();
         }
+
 
         // -------------------- GET ALL USERS --------------------
 
