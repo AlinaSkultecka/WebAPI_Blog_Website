@@ -16,7 +16,7 @@ builder.Services.AddControllers();
 
 // -------------------- DATABASE --------------------
 
-var connString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Lab2_v4_Db;Integrated Security=True;";
+var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connString)
@@ -96,12 +96,16 @@ var app = builder.Build();
 
 
 // -------------------- MIDDLEWARE --------------------
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 
