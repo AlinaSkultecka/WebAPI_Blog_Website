@@ -5,47 +5,35 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Lab2_WebAPI_v4.Controller
 {
-    /// <summary>
-    /// API controller responsible for user management and authentication.
-    /// Handles CRUD operations and login functionality.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly BlobLoggingService _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UserController"/> class.
-        /// </summary>
-        public UserController(IUserService service)
+        public UserController(IUserService service, BlobLoggingService logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         // -------------------- GET ALL USERS --------------------
 
-        /// <summary>
-        /// Retrieves all registered users.
-        /// Requires authentication.
-        /// </summary>
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _service.GetAllAsync();
+
+            await _logger.LogAsync("All users retrieved");
+
             return Ok(users);
         }
 
         // -------------------- CREATE USER --------------------
 
-        /// <summary>
-        /// Registers a new user account.
-        /// </summary>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDto dto)
         {
             if (!ModelState.IsValid)
@@ -53,15 +41,13 @@ namespace Lab2_WebAPI_v4.Controller
 
             await _service.AddAsync(dto);
 
+            await _logger.LogAsync($"New user registered: {dto.Username}");
+
             return StatusCode(StatusCodes.Status201Created);
         }
 
         // -------------------- UPDATE USER --------------------
 
-        /// <summary>
-        /// Updates an existing user's information.
-        /// Requires authentication.
-        /// </summary>
         [HttpPut]
         [Authorize]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
@@ -74,15 +60,13 @@ namespace Lab2_WebAPI_v4.Controller
             if (!updated)
                 return NotFound();
 
+            await _logger.LogAsync($"User updated: {dto.Id}");
+
             return NoContent();
         }
 
         // -------------------- DELETE USER --------------------
 
-        /// <summary>
-        /// Deletes a user by ID.
-        /// Requires authentication.
-        /// </summary>
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteUser(int id)
@@ -95,18 +79,14 @@ namespace Lab2_WebAPI_v4.Controller
             if (!deleted)
                 return NotFound();
 
+            await _logger.LogAsync($"User deleted: {id}");
+
             return NoContent();
         }
 
         // -------------------- LOGIN --------------------
 
-        /// <summary>
-        /// Authenticates a user and generates a JWT token.
-        /// </summary>
-       
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             if (!ModelState.IsValid)
@@ -115,7 +95,12 @@ namespace Lab2_WebAPI_v4.Controller
             var token = await _service.LoginAsync(request);
 
             if (token == null)
+            {
+                await _logger.LogAsync($"Failed login attempt for email: {request.Email}");
                 return Unauthorized();
+            }
+
+            await _logger.LogAsync($"User logged in: {request.Email}");
 
             return Ok(new { Token = token });
         }

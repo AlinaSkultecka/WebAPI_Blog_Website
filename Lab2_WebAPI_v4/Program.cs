@@ -1,3 +1,4 @@
+using Lab2_WebAPI_v4;
 using Lab2_WebAPI_v4.Core.Services;
 using Lab2_WebAPI_v4.Core.Services.Interfaces;
 using Lab2_WebAPI_v4.Data;
@@ -39,7 +40,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile).Assembly);
-
+builder.Services.AddScoped<BlobLoggingService>();
 
 
 // -------------------- JWT AUTHENTICATION --------------------

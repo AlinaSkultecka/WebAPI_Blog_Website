@@ -1,9 +1,9 @@
-﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
+﻿using Lab2_WebAPI_v4;
+using Lab2_WebAPI_v4.Core.Services.Interfaces;
 using Lab2_WebAPI_v4.Data.DTOs.Post;
 using Lab2_WebAPI_v4.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 
 /// <summary>
 /// API controller responsible for managing blog posts.
@@ -15,10 +15,12 @@ using Microsoft.AspNetCore.Mvc;
 public class PostController : ControllerBase
 {
     private readonly IPostService _service;
+    private readonly BlobLoggingService _logger;
 
-    public PostController(IPostService service)
+    public PostController(IPostService service, BlobLoggingService logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     /// <summary>
@@ -57,7 +59,10 @@ public class PostController : ControllerBase
 
         try
         {
-            var createdPost = await _service.AddAsync(dto, GetUserIdFromToken());
+            var userId = GetUserIdFromToken();
+            var createdPost = await _service.AddAsync(dto, userId);
+
+            await _logger.LogAsync($"User {userId} created a post with title: {dto.Title}");
 
             return Created("", createdPost);
         }
@@ -83,10 +88,13 @@ public class PostController : ControllerBase
 
         try
         {
-            var ok = await _service.UpdateAsync(dto, GetUserIdFromToken());
+            var userId = GetUserIdFromToken();
+            var ok = await _service.UpdateAsync(dto, userId);
 
             if (!ok)
                 return Forbid();
+
+            await _logger.LogAsync($"User {userId} updated post with id: {dto.PostId}");
 
             return Ok();
         }
@@ -106,10 +114,13 @@ public class PostController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> DeletePost(int postId)
     {
-        var ok = await _service.DeleteAsync(postId, GetUserIdFromToken());
+        var userId = GetUserIdFromToken();
+        var ok = await _service.DeleteAsync(postId, userId);
 
         if (!ok)
             return Forbid();
+
+        await _logger.LogAsync($"User {userId} deleted post with id: {postId}");
 
         return NoContent();
     }
