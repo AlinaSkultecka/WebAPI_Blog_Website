@@ -45,8 +45,12 @@ builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile
 // -------------------- JWT AUTHENTICATION --------------------
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-
 var secret = jwtSettings["Key"];
+
+if (string.IsNullOrWhiteSpace(secret))
+{
+    throw new Exception("JWT secret key is missing.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -65,7 +69,6 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
-
 
 // -------------------- SWAGGER --------------------
 
