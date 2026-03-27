@@ -94,7 +94,7 @@ public class PostController : ControllerBase
             if (!ok)
                 return Forbid();
 
-            await _logger.LogAsync($"User {userId} updated post with id: {dto.PostId}");
+            await _logger.LogAsync($"User {userId} updated post with id: {dto.PostID}");
 
             return Ok();
         }

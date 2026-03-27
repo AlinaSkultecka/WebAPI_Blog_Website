@@ -41,7 +41,7 @@ namespace Lab2_WebAPI_v4.Controller
 
             await _service.AddAsync(dto);
 
-            await _logger.LogAsync($"New user registered: {dto.Username}");
+            await _logger.LogAsync($"New user registered: {dto.UserName}");
 
             return StatusCode(StatusCodes.Status201Created);
         }
@@ -60,7 +60,7 @@ namespace Lab2_WebAPI_v4.Controller
             if (!updated)
                 return NotFound();
 
-            await _logger.LogAsync($"User updated: {dto.Id}");
+            await _logger.LogAsync($"User updated: {dto.UserID}");
 
             return NoContent();
         }
@@ -96,11 +96,11 @@ namespace Lab2_WebAPI_v4.Controller
 
             if (token == null)
             {
-                await _logger.LogAsync($"Failed login attempt for email: {request.Email}");
+                await _logger.LogAsync($"Failed login attempt for username: {request.UserName}");
                 return Unauthorized();
             }
 
-            await _logger.LogAsync($"User logged in: {request.Email}");
+            await _logger.LogAsync($"User logged in: {request.UserName}");
 
             return Ok(new { Token = token });
         }
