@@ -47,7 +47,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile).Assembly);
 
-//builder.Services.AddScoped<BlobLoggingService>();
+builder.Services.AddScoped<BlobLoggingService>();
 
 
 // -------------------- JWT AUTHENTICATION --------------------
