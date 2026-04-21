@@ -12,13 +12,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers(); 
-
+// -------------------- CONTROLLERS --------------------
+builder.Services.AddControllers();
 
 
 // -------------------- DATABASE --------------------
 
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connString))
+{
+    throw new Exception("DefaultConnection is missing.");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connString)
@@ -41,13 +46,16 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile).Assembly);
-builder.Services.AddScoped<BlobLoggingService>();
+
+//builder.Services.AddScoped<BlobLoggingService>();
 
 
 // -------------------- JWT AUTHENTICATION --------------------
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secret = jwtSettings["Key"];
+var issuer = jwtSettings["Issuer"];
+var audience = jwtSettings["Audience"];
 
 if (string.IsNullOrWhiteSpace(secret))
 {
@@ -64,6 +72,8 @@ builder.Services
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
             IssuerSigningKey =
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
             ClockSkew = TimeSpan.Zero
@@ -92,7 +102,8 @@ builder.Services.AddSwaggerGen(options =>
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer"
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 });
 
@@ -101,17 +112,24 @@ var app = builder.Build();
 
 
 // -------------------- MIDDLEWARE --------------------
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
-
 app.MapControllers();
-
 app.MapGet("/ping", () => "API is running");
 
 app.Run();
