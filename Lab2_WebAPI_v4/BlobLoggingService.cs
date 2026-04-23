@@ -5,22 +5,26 @@ namespace Lab2_WebAPI_v4
 {
     public class BlobLoggingService
     {
-        private readonly string _connectionString;
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly IConfiguration _config;
 
-        public BlobLoggingService(IConfiguration config)
+        public BlobLoggingService(BlobServiceClient blobServiceClient, IConfiguration config)
         {
-            _connectionString = config["Storage:ConnectionString"];
+            _blobServiceClient = blobServiceClient;
+            _config = config;
         }
 
         public async Task LogAsync(string message)
         {
-            var containerClient = new BlobContainerClient(_connectionString, "logs");
+            var containerName = _config["Storage:ContainerName"] ?? "logs";
+
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             await containerClient.CreateIfNotExistsAsync();
 
             string fileName = $"log-{DateTime.UtcNow:yyyy-MM-dd-HH-mm-ss-fff}.txt";
             var blobClient = containerClient.GetBlobClient(fileName);
 
-            var content = $"{DateTime.UtcNow}: {message}";
+            var content = $"{DateTime.UtcNow:O}: {message}";
             var bytes = Encoding.UTF8.GetBytes(content);
 
             using var stream = new MemoryStream(bytes);

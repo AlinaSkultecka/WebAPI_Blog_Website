@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Lab2_WebAPI_v4;
 using Lab2_WebAPI_v4.Core.Services;
 using Lab2_WebAPI_v4.Core.Services.Interfaces;
@@ -46,6 +47,20 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile).Assembly);
+
+
+// -------------------- AZURE BLOB STORAGE --------------------
+
+builder.Services.AddSingleton(x =>
+{
+    var configuration = x.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("AzureBlobStorage");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+        throw new Exception("AzureBlobStorage connection string is missing.");
+
+    return new BlobServiceClient(connectionString);
+});
 
 builder.Services.AddScoped<BlobLoggingService>();
 
