@@ -19,17 +19,19 @@ builder.Services.AddControllers();
 
 // -------------------- DATABASE --------------------
 
+// First try to get connection string from configuration.
+// In Azure, this can come from App Service -> Key Vault reference.
+// Locally, this comes from appsettings.json.
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrWhiteSpace(connString))
 {
-    throw new Exception("DefaultConnection is missing.");
+    throw new Exception("DefaultConnection is missing from configuration.");
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connString)
 );
-
 
 // -------------------- REPOSITORIES --------------------
 
@@ -54,16 +56,15 @@ builder.Services.AddAutoMapper(typeof(Lab2_WebAPI_v4.Core.Mapping.MappingProfile
 builder.Services.AddSingleton(x =>
 {
     var configuration = x.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("AzureBlobStorage");
+    var blobConnectionString = configuration.GetConnectionString("AzureBlobStorage");
 
-    if (string.IsNullOrWhiteSpace(connectionString))
+    if (string.IsNullOrWhiteSpace(blobConnectionString))
         throw new Exception("AzureBlobStorage connection string is missing.");
 
-    return new BlobServiceClient(connectionString);
+    return new BlobServiceClient(blobConnectionString);
 });
 
 builder.Services.AddScoped<BlobLoggingService>();
-
 
 // -------------------- JWT AUTHENTICATION --------------------
 
