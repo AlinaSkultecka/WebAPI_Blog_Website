@@ -1,0 +1,26 @@
+﻿# Build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# App settings (VERY IMPORTANT)
+appsettings.Development.json
+
+# Optional: if you ever store secrets locally
+secrets.json
+
+# VS Code
+.vscode/
+
+# Node (for your frontend later)
+node_modules/
+dist/
