@@ -28,18 +28,22 @@ namespace Lab2_WebAPI_v4.Controller
             _appLogger = appLogger;
         }
 
-        // -------------------- GET ALL USERS --------------------
+        // -------------------- hello --------------------
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> Hello()
         {
-            var users = await _service.GetAllAsync();
-
-            await _logger.LogAsync("All users retrieved");
-            _appLogger.LogInformation("All users retrieved.");
-
-            return Ok(users);
+            return Ok("Hello, World!");
         }
+
+        //public async Task<IActionResult> GetAllUsers()
+        //{
+        //    var users = await _service.GetAllAsync();
+
+        //    await _logger.LogAsync("All users retrieved");
+        //    _appLogger.LogInformation("All users retrieved.");
+
+        //    return Ok(users);
+        //}
 
         // -------------------- CREATE USER --------------------
         [HttpPost]

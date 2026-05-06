@@ -2,6 +2,7 @@
 using Lab2_WebAPI_v4.Data.DTOs.User;
 using Lab2_WebAPI_v4.Data.Entities;
 using Lab2_WebAPI_v4.Data.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,7 +26,6 @@ namespace Lab2_WebAPI_v4.Core.Services
         }
 
         // -------------------- GET ALL USERS --------------------
-
         /// <summary>
         /// Retrieves all registered users.
         /// </summary>

@@ -67,22 +67,24 @@ namespace Lab2_WebAPI_v4.Controller
             {
                 var createdPost = await _service.AddAsync(dto, userId.Value);
 
-                // Temporarily disabled to check if Blob causes 500
-                // await _logger.LogAsync($"User {userId.Value} created a post: {dto.Title}");
-
-                _appLogger.LogInformation("User {UserId} created a post: {Title}", userId.Value, dto.Title);
+                _appLogger.LogInformation(
+                    "User {UserId} created a post: {Title}",
+                    userId.Value,
+                    dto.Title);
 
                 return Created("", createdPost);
             }
             catch (ArgumentException ex)
             {
-                _appLogger.LogWarning(ex, "Invalid post creation request.");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _appLogger.LogError(ex, "Unexpected error while creating post.");
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new
+                {
+                    message = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
             }
         }
 
