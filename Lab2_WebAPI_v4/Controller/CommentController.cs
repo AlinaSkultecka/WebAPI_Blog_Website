@@ -1,95 +1,90 @@
 ﻿using Lab2_WebAPI_v4.Core.Services.Interfaces;
 using Lab2_WebAPI_v4.Data.DTOs.Comment;
-using Lab2_WebAPI_v4.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-/// <summary>
-/// API controller responsible for managing blog post comments.
-/// Requires authentication for all endpoints.
-/// </summary>
-[ApiController]
-[Route("api/[controller]")]
-[Authorize]
-public class CommentController : ControllerBase
+namespace Lab2_WebAPI_v4.Controller
 {
-    private readonly ICommentService _service;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CommentController"/> class.
-    /// </summary>
-    public CommentController(ICommentService service)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class CommentController : ControllerBase
     {
-        _service = service;
-    }
+        private readonly ICommentService _service;
 
-    /// <summary>
-    /// Extracts the authenticated user's ID from the JWT token.
-    /// </summary>
-    private int GetUserIdFromToken()
-    {
-        return int.Parse(User.FindFirst("UserID")!.Value);
-    }
-
-    // -------------------- GET COMMENTS BY POST --------------------
-
-    /// <summary>
-    /// Retrieves all comments associated with a specific post.
-    /// </summary>
-    [HttpGet("{postId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetComments(int postId)
-    {
-        var comments = await _service.GetByPostAsync(postId);
-        return Ok(comments);
-    }
-
-    // -------------------- ADD COMMENT --------------------
-
-    /// <summary>
-    /// Creates a new comment for a post.
-    /// Users are not allowed to comment on their own posts.
-    /// </summary>
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> AddComment([FromBody] CreateCommentDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
+        public CommentController(ICommentService service)
         {
-            await _service.AddAsync(dto, GetUserIdFromToken());
-            return StatusCode(StatusCodes.Status201Created);
+            _service = service;
         }
-        catch (InvalidOperationException)
+
+        private int? GetUserIdFromToken()
         {
-            return Forbid();
+            var claim = User.FindFirst("UserID");
+
+            if (claim == null)
+                return null;
+
+            if (!int.TryParse(claim.Value, out var userId))
+                return null;
+
+            return userId;
         }
-        catch (ArgumentException ex)
+
+        [HttpGet("{postId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetComments(int postId)
         {
-            return BadRequest(ex.Message);
+            var comments = await _service.GetByPostAsync(postId);
+            return Ok(comments);
         }
-    }
 
-    // -------------------- DELETE COMMENT --------------------
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> AddComment([FromBody] CreateCommentDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-    /// <summary>
-    /// Deletes a comment.
-    /// Only the user who created the comment can delete it.
-    /// </summary>
-    [HttpDelete("{commentId}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> DeleteComment(int commentId)
-    {
-        var ok = await _service.DeleteAsync(commentId, GetUserIdFromToken());
+            var userId = GetUserIdFromToken();
 
-        if (!ok)
-            return Forbid();
+            if (userId == null)
+                return Unauthorized("UserID claim is missing from token.");
 
-        return NoContent();
+            try
+            {
+                await _service.AddAsync(dto, userId.Value);
+                return StatusCode(StatusCodes.Status201Created);
+            }
+            catch (InvalidOperationException)
+            {
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{commentId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> DeleteComment(int commentId)
+        {
+            var userId = GetUserIdFromToken();
+
+            if (userId == null)
+                return Unauthorized("UserID claim is missing from token.");
+
+            var ok = await _service.DeleteAsync(commentId, userId.Value);
+
+            if (!ok)
+                return Forbid();
+
+            return NoContent();
+        }
     }
 }
